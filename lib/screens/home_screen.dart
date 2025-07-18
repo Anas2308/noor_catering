@@ -48,10 +48,21 @@ class HomeScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
+                  const Icon(
+                    Icons.restaurant,
+                    size: 50,
+                    color: Color(0xFF4CAF50),
+                  ),
                   const SizedBox(height: 10),
                   Text(
-                    'Noor Catering',
+                    'Willkommen bei Noor Catering',
                     style: Theme.of(context).textTheme.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    'Verwalten Sie Ihr Catering-Business',
+                    style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
                 ],

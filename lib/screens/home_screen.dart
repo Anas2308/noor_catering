@@ -3,6 +3,7 @@ import 'ingredients/ingredients_screen.dart';
 import 'recipes/recipes_screen.dart';
 import 'customers/customers_screen.dart';
 import 'orders/orders_screen.dart';
+import '../widgets/golden_lines_painter.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -61,32 +62,19 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Goldene Linien
-          CustomPaint(
-            size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
-            painter: GoldenLinesPainter(),
-          ),
-
           // Zentrale Raute
           Center(
             child: Transform.rotate(
-              angle: 0.785398, // 45 Grad in Radiant
+              angle: 0.785398,
               child: Container(
                 width: 140,
                 height: 140,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF800020),
+                  color: const Color(0xFF000000),
                   border: Border.all(color: const Color(0xFFD4AF37), width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFD4AF37).withValues(alpha: 0.5),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
                 ),
                 child: Transform.rotate(
-                  angle: -0.785398, // Text wieder gerade drehen
+                  angle: -0.785398,
                   child: Center(
                     child: Text(
                       'Noor\nCatering',
@@ -100,6 +88,12 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+          ),
+
+          // Goldene Linien
+          CustomPaint(
+            size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
+            painter: GoldenLinesPainter(),
           ),
         ],
       ),
@@ -130,51 +124,5 @@ class FullButton extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class GoldenLinesPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = const Color(0xFFD4AF37)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    final double centerX = size.width / 2;
-    final double centerY = size.height / 2;
-    final double diamondSize = 140;
-    final double diamondRadius = diamondSize * 0.707 / 2; // 45° gedrehtes Quadrat
-
-    // Rauten-Eckpunkte berechnen
-    final Offset topCorner = Offset(centerX, centerY - diamondRadius);
-    final Offset rightCorner = Offset(centerX + diamondRadius, centerY);
-    final Offset bottomCorner = Offset(centerX, centerY + diamondRadius);
-    final Offset leftCorner = Offset(centerX - diamondRadius, centerY);
-
-    // Bildschirm-Ecken
-    final Offset topLeft = const Offset(0, 0);
-    final Offset topRight = Offset(size.width, 0);
-    final Offset bottomLeft = Offset(0, size.height);
-    final Offset bottomRight = Offset(size.width, size.height);
-
-    // Linien von Rauten-Ecken zu Bildschirm-Ecken
-    canvas.drawLine(topCorner, topLeft, paint);
-    canvas.drawLine(topCorner, topRight, paint);
-    canvas.drawLine(leftCorner, topLeft, paint);
-    canvas.drawLine(leftCorner, bottomLeft, paint);
-    canvas.drawLine(rightCorner, topRight, paint);
-    canvas.drawLine(rightCorner, bottomRight, paint);
-    canvas.drawLine(bottomCorner, bottomLeft, paint);
-    canvas.drawLine(bottomCorner, bottomRight, paint);
-
-    // Trennlinien zwischen den Buttons
-    canvas.drawLine(Offset(centerX, 0), Offset(centerX, size.height), paint);
-    canvas.drawLine(Offset(0, centerY), Offset(size.width, centerY), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
   }
 }

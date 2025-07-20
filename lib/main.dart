@@ -15,18 +15,18 @@ class CateringApp extends StatelessWidget {
       title: 'Noor Catering',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF800020),
-        scaffoldBackgroundColor: const Color(0xFF800020),
+        primaryColor: const Color(0xFF335B41), // Grün statt Rot
+        scaffoldBackgroundColor: const Color(0xFF335B41), // Grün statt Rot
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
-            color: Color(0xFFD4AF37),
+            color: Color(0xFFD4AF37), // Gold bleibt
           ),
           bodyLarge: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white,
+            color: Colors.white, // Weiß bleibt
           ),
         ),
       ),
@@ -37,7 +37,7 @@ class CateringApp extends StatelessWidget {
             child: Container(
               constraints: const BoxConstraints(maxWidth: 400),
               decoration: const BoxDecoration(
-                color: Color(0xFF800020),
+                color: Color(0xFF335B41), // Grün statt Rot
               ),
               child: child,
             ),

@@ -70,8 +70,8 @@ class HomeScreen extends StatelessWidget {
                 width: 140,
                 height: 140,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF830909),
-                  border: Border.all(color: const Color(0xFFF7EF8A), width: 3),
+                  color: const Color(0xFF000000),
+                  border: Border.all(color: const Color(0xFFD4AF37), width: 3),
                 ),
                 child: Transform.rotate(
                   angle: -0.785398,
@@ -112,7 +112,7 @@ class FullButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: const Color(0xFF830909),
+        color: const Color(0xFF335B41),
         child: Center(
           child: Text(
             title,

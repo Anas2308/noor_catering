@@ -1,111 +1,9 @@
 import 'package:flutter/material.dart';
 import 'ingredients/ingredients_screen.dart';
 import 'recipes/recipes_screen.dart';
+import 'customers/customers_screen.dart';
 import 'orders/orders_screen.dart';
 import '../widgets/golden_lines_painter.dart';
-
-// Customer Model - direkt hier definiert
-class Customer {
-  final String id;
-  String name;
-  String phoneNumber;
-
-  Customer({
-    required this.id,
-    required this.name,
-    required this.phoneNumber,
-  });
-}
-
-// Vollständiger CustomersScreen - direkt hier definiert
-class CustomersScreen extends StatefulWidget {
-  const CustomersScreen({super.key});
-
-  @override
-  State<CustomersScreen> createState() => _CustomersScreenState();
-}
-
-class _CustomersScreenState extends State<CustomersScreen> {
-  final List<Customer> _customers = [
-    Customer(id: '1', name: 'Familie Schmidt', phoneNumber: '+49 123 456789'),
-    Customer(id: '2', name: 'Ahmed Hassan', phoneNumber: '+49 987 654321'),
-    Customer(id: '3', name: 'Sarah Miller', phoneNumber: '+49 555 123456'),
-  ];
-
-  void _addCustomer() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Neuer Kunde'),
-        content: const Text('Kunde-hinzufügen Funktion kommt hier hin!'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      appBar: AppBar(
-        title: const Text('Kunden'),
-        backgroundColor: const Color(0xFF9C27B0),
-        foregroundColor: Colors.white,
-      ),
-      body: _customers.isEmpty ? _buildEmptyState() : _buildCustomersList(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addCustomer,
-        backgroundColor: const Color(0xFF9C27B0),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.people, size: 100, color: Color(0xFF9C27B0)),
-          SizedBox(height: 20),
-          Text('Keine Kunden', style: TextStyle(fontSize: 24)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCustomersList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _customers.length,
-      itemBuilder: (context, index) {
-        final customer = _customers[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: Color(0xFF9C27B0),
-              child: Icon(Icons.person, color: Colors.white),
-            ),
-            title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(customer.phoneNumber),
-            trailing: const Icon(Icons.arrow_forward_ios),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${customer.name} angeklickt')),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -113,11 +11,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
-      backgroundColor: const Color(0xFF800020), // EINE Farbe!
-=======
-      backgroundColor: const Color(0xFF335B41), // Hauptfarbe
->>>>>>> 06458e6 (Navigation zu Kunden-Screen)
+      backgroundColor: const Color(0xFF335B41),
       body: Stack(
         children: [
           // Oberer linker Button - Zutaten
@@ -165,7 +59,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Unterer rechter Button - Kunden (FUNKTIONAL!)
+          // Unterer rechter Button - Kunden
           Positioned(
             top: MediaQuery.of(context).size.height / 2,
             left: MediaQuery.of(context).size.width / 2,
@@ -173,10 +67,7 @@ class HomeScreen extends StatelessWidget {
             bottom: 0,
             child: FullButton(
               title: 'Kunden',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CustomersScreen()),
-              ),
+              onTap: () => print("KUNDEN BUTTON GEKLICKT!"),
             ),
           ),
 
@@ -230,7 +121,7 @@ class FullButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: const Color(0xFF335B41), // GLEICHE Farbe wie Hintergrund
+        color: const Color(0xFF335B41),
         child: Center(
           child: Text(
             title,

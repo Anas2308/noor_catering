@@ -113,7 +113,11 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+<<<<<<< HEAD
       backgroundColor: const Color(0xFF800020), // EINE Farbe!
+=======
+      backgroundColor: const Color(0xFF335B41), // Hauptfarbe
+>>>>>>> 06458e6 (Navigation zu Kunden-Screen)
       body: Stack(
         children: [
           // Oberer linker Button - Zutaten
@@ -226,7 +230,7 @@ class FullButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        color: const Color(0xFF335B41),
+        color: const Color(0xFF335B41), // GLEICHE Farbe wie Hintergrund
         child: Center(
           child: Text(
             title,

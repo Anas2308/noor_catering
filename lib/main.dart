@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -29,6 +30,22 @@ class CateringApp extends StatelessWidget {
           ),
         ),
       ),
+      builder: (context, child) {
+        // Für Web: Mobile-ähnliche Darstellung mit maximaler Breite
+        if (kIsWeb) {
+          return Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 400),
+              decoration: const BoxDecoration(
+                color: Color(0xFF800020),
+              ),
+              child: child,
+            ),
+          );
+        }
+        // Für Mobile: Standard Darstellung
+        return child!;
+      },
       home: const HomeScreen(),
     );
   }

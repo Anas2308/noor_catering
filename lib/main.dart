@@ -26,7 +26,7 @@ class CateringApp extends StatelessWidget {
           bodyLarge: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w600,
-            color: Colors.white, // Weiß bleibt
+            color: Colors.black, // Weiß bleibt
           ),
         ),
       ),

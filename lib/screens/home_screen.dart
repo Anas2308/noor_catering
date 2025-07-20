@@ -14,64 +14,13 @@ class HomeScreen extends StatelessWidget {
       backgroundColor: const Color(0xFF335B41),
       body: Stack(
         children: [
-          // Oberer linker Button - Zutaten
-          Positioned(
-            top: 0,
-            left: 0,
-            right: MediaQuery.of(context).size.width / 2,
-            bottom: MediaQuery.of(context).size.height / 2,
-            child: FullButton(
-              title: 'Zutaten',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const IngredientsScreen()),
-              ),
-            ),
+          // WICHTIG: Goldene Linien ZUERST (im Hintergrund)
+          CustomPaint(
+            size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
+            painter: GoldenLinesPainter(),
           ),
 
-          // Oberer rechter Button - Rezepte
-          Positioned(
-            top: 0,
-            left: MediaQuery.of(context).size.width / 2,
-            right: 0,
-            bottom: MediaQuery.of(context).size.height / 2,
-            child: FullButton(
-              title: 'Rezepte',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const RecipesScreen()),
-              ),
-            ),
-          ),
-
-          // Unterer linker Button - Bestellungen
-          Positioned(
-            top: MediaQuery.of(context).size.height / 2,
-            left: 0,
-            right: MediaQuery.of(context).size.width / 2,
-            bottom: 0,
-            child: FullButton(
-              title: 'Bestellungen',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OrdersScreen()),
-              ),
-            ),
-          ),
-
-          // Unterer rechter Button - Kunden
-          Positioned(
-            top: MediaQuery.of(context).size.height / 2,
-            left: MediaQuery.of(context).size.width / 2,
-            right: 0,
-            bottom: 0,
-            child: FullButton(
-              title: 'Kunden',
-              onTap: () => print("KUNDEN BUTTON GEKLICKT!"),
-            ),
-          ),
-
-          // Zentrale Raute
+          // Zentrale Raute (im Hintergrund)
           Center(
             child: Transform.rotate(
               angle: 0.785398,
@@ -99,10 +48,78 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
-          // Goldene Linien
-          CustomPaint(
-            size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
-            painter: GoldenLinesPainter(),
+          // BUTTONS KOMMEN ZULETZT (im Vordergrund - klickbar!)
+
+          // Oberer linker Button - Zutaten
+          Positioned(
+            top: 0,
+            left: 0,
+            right: MediaQuery.of(context).size.width / 2,
+            bottom: MediaQuery.of(context).size.height / 2,
+            child: FullButton(
+              title: 'Zutaten',
+              onTap: () {
+                print("Zutaten Button geklickt!");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const IngredientsScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Oberer rechter Button - Rezepte
+          Positioned(
+            top: 0,
+            left: MediaQuery.of(context).size.width / 2,
+            right: 0,
+            bottom: MediaQuery.of(context).size.height / 2,
+            child: FullButton(
+              title: 'Rezepte',
+              onTap: () {
+                print("Rezepte Button geklickt!");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RecipesScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Unterer linker Button - Bestellungen
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2,
+            left: 0,
+            right: MediaQuery.of(context).size.width / 2,
+            bottom: 0,
+            child: FullButton(
+              title: 'Bestellungen',
+              onTap: () {
+                print("Bestellungen Button geklickt!");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const OrdersScreen()),
+                );
+              },
+            ),
+          ),
+
+          // Unterer rechter Button - Kunden
+          Positioned(
+            top: MediaQuery.of(context).size.height / 2,
+            left: MediaQuery.of(context).size.width / 2,
+            right: 0,
+            bottom: 0,
+            child: FullButton(
+              title: 'Kunden',
+              onTap: () {
+                print("KUNDEN BUTTON GEKLICKT!!!");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CustomersScreen()),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -118,16 +135,19 @@ class FullButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        color: const Color(0xFF335B41),
-        child: Center(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontSize: 24,
-              letterSpacing: 1.2,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          color: Colors.transparent, // Keine Farbe - zeigt Hintergrund + goldene Linien
+          child: Center(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontSize: 24,
+                letterSpacing: 1.2,
+              ),
             ),
           ),
         ),

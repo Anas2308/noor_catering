@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:intl/intl.dart';
-import 'ingredients_screen.dart'; // Import für Models
+import 'ingredients_screen.dart';
 import 'add_edit_ingredient_screen.dart';
+
 class IngredientDetailsScreen extends StatelessWidget {
   final Ingredient ingredient;
   final Function(Ingredient) onUpdate;
@@ -40,7 +41,7 @@ class IngredientDetailsScreen extends StatelessWidget {
         ),
         title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.red),
+            const Icon(Icons.warning, color: Colors.red),
             const SizedBox(width: 8),
             const Text(
               'Zutat löschen',
@@ -200,7 +201,7 @@ class IngredientDetailsScreen extends StatelessWidget {
                   const SizedBox(height: 16),
 
                   // Preisvergleich Card
-                  _buildPriceComparisonCard(),
+                  _buildPriceComparisonCard(context),
                   const SizedBox(height: 16),
 
                   // Notizen Card (falls vorhanden)
@@ -304,7 +305,7 @@ class IngredientDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceComparisonCard() {
+  Widget _buildPriceComparisonCard(BuildContext context) {
     final allStores = <String, double>{...ingredient.prices};
     if (ingredient.otherStoreName != null && ingredient.otherStorePrice != null) {
       allStores[ingredient.otherStoreName!] = ingredient.otherStorePrice!;
@@ -361,11 +362,11 @@ class IngredientDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(Icons.compare_arrows, color: Color(0xFFD4AF37)),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.compare_arrows, color: Color(0xFFD4AF37)),
+                SizedBox(width: 8),
+                Text(
                   'Preisvergleich',
                   style: TextStyle(
                     fontSize: 18,
@@ -381,26 +382,26 @@ class IngredientDetailsScreen extends StatelessWidget {
             ...sortedStores.asMap().entries.map((entry) {
               final index = entry.key;
               final storeEntry = entry.value;
-              final ischeapest = index == 0;
+              final isCheapest = index == 0;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: ischeapest
+                  color: isCheapest
                       ? const Color(0xFFD4AF37).withValues(alpha: 0.2)
                       : Colors.black.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: ischeapest
+                    color: isCheapest
                         ? const Color(0xFFD4AF37)
                         : Colors.grey.withValues(alpha: 0.3),
-                    width: ischeapest ? 2 : 1,
+                    width: isCheapest ? 2 : 1,
                   ),
                 ),
                 child: Row(
                   children: [
-                    if (ischeapest) ...[
+                    if (isCheapest) ...[
                       const Icon(
                         Icons.star,
                         color: Color(0xFFD4AF37),
@@ -413,8 +414,8 @@ class IngredientDetailsScreen extends StatelessWidget {
                       child: Text(
                         storeEntry.key,
                         style: TextStyle(
-                          color: ischeapest ? const Color(0xFFD4AF37) : Colors.white,
-                          fontWeight: ischeapest ? FontWeight.bold : FontWeight.normal,
+                          color: isCheapest ? const Color(0xFFD4AF37) : Colors.white,
+                          fontWeight: isCheapest ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     ),
@@ -422,7 +423,7 @@ class IngredientDetailsScreen extends StatelessWidget {
                     Text(
                       '${storeEntry.value.toStringAsFixed(2)}€',
                       style: TextStyle(
-                        color: ischeapest ? const Color(0xFFD4AF37) : Colors.white,
+                        color: isCheapest ? const Color(0xFFD4AF37) : Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -443,7 +444,7 @@ class IngredientDetailsScreen extends StatelessWidget {
                       icon: Icon(
                         Icons.copy,
                         size: 16,
-                        color: ischeapest ? const Color(0xFFD4AF37) : Colors.grey,
+                        color: isCheapest ? const Color(0xFFD4AF37) : Colors.grey,
                       ),
                     ),
                   ],
@@ -687,29 +688,6 @@ class IngredientDetailsScreen extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// Ende der DateidientScreen - würde normalerweise importiert
-class AddEditIngredientScreen extends StatelessWidget {
-  final IngredientCategory initialCategory;
-  final Ingredient? ingredient;
-  final Function(Ingredient) onSave;
-
-  const AddEditIngredientScreen({
-    super.key,
-    required this.initialCategory,
-    this.ingredient,
-    required this.onSave,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Add/Edit Screen would be here'),
-      ),
     );
   }
 }

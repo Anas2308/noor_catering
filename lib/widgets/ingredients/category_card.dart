@@ -2,88 +2,101 @@ import 'package:flutter/material.dart';
 import '../../models/ingredient.dart';
 import '../../utils/constants.dart';
 
-class IngredientCard extends StatelessWidget {
-  final Ingredient ingredient;
+class CategoryCard extends StatelessWidget {
+  final IngredientCategory category;
+  final int ingredientCount;
   final VoidCallback onTap;
 
-  const IngredientCard({
+  const CategoryCard({
     super.key,
-    required this.ingredient,
+    required this.category,
+    required this.ingredientCount,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: AppDecorations.categoryBorder(ingredient.category.color),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        border: Border.all(
+          color: AppConstants.primaryGold,
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppConstants.primaryGold.withValues(alpha: 0.2),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           child: Padding(
-            padding: const EdgeInsets.all(AppConstants.padding),
-            child: Row(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icon oder Bild
+                // Icon mit Kategorie-Farbe
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: 45,
+                  height: 45,
                   decoration: BoxDecoration(
-                    color: ingredient.category.color.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(28),
+                    color: category.color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(22),
                     border: Border.all(
-                      color: ingredient.category.color,
-                      width: 1,
+                      color: category.color,
+                      width: 1.5,
                     ),
                   ),
                   child: Icon(
-                    ingredient.category.icon,
-                    size: 28,
-                    color: ingredient.category.color,
+                    category.icon,
+                    size: 24,
+                    color: category.color,
                   ),
                 ),
 
-                const SizedBox(width: 16),
+                const SizedBox(height: 8),
 
-                // Ingredient Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        ingredient.name,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: ingredient.category.color,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Einheit: ${ingredient.unit}',
-                        style: AppConstants.whiteText.copyWith(fontSize: 14),
-                      ),
-                      const SizedBox(height: 4),
-                      if (ingredient.prices.isNotEmpty)
-                        Text(
-                          '${ingredient.cheapestPrice.toStringAsFixed(2)}€ bei ${ingredient.cheapestStore}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppConstants.primaryGold,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                    ],
+                // Kategorie Name
+                Text(
+                  category.displayName,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppConstants.primaryGold,
                   ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
 
-                // Pfeil
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: ingredient.category.color,
+                const SizedBox(height: 6),
+
+                // Anzahl der Zutaten
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryGold.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppConstants.primaryGold,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    '$ingredientCount',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppConstants.primaryGold,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),

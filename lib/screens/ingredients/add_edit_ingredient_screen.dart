@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../models/ingredient.dart';  // Nutze zentrale Models
-import '../../services/image_service.dart';
+import '../../models/ingredient.dart';
 import '../../widgets/ingredients/photo_picker_widget.dart';
 import '../../utils/constants.dart';
 
@@ -252,6 +251,14 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                 hintStyle: AppConstants.greyHint,
                 prefixIcon: Icon(Icons.label, color: _selectedCategory.color),
                 border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _selectedCategory.color),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _selectedCategory.color.withValues(alpha: 0.5)),
+                ),
+                focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: _selectedCategory.color, width: 2),
                 ),
@@ -638,12 +645,4 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     _otherStorePriceController.dispose();
     super.dispose();
   }
-} _selectedCategory.color),
-),
-enabledBorder: OutlineInputBorder(
-borderRadius: BorderRadius.circular(8),
-borderSide: BorderSide(color: _selectedCategory.color.withValues(alpha: 0.5)),
-),
-focusedBorder: OutlineInputBorder(
-borderRadius: BorderRadius.circular(8),
-borderSide: BorderSide(color:
+}

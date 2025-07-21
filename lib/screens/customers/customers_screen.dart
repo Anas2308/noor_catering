@@ -23,6 +23,7 @@ class CustomersScreen extends StatefulWidget {
 
 class _CustomersScreenState extends State<CustomersScreen> {
   final List<Customer> _customers = [
+
   ];
 
   void _addCustomer(String name, String phoneNumber) {
@@ -1000,6 +1001,10 @@ class _AddEditCustomerScreenState extends State<AddEditCustomerScreen> {
                           color: Colors.white,
                           fontSize: 16,
                         ),
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9+\-\s()]')), // Nur Zahlen, +, -, Leerzeichen, Klammern
+                        ],
                         decoration: const InputDecoration(
                           labelText: 'Telefonnummer *',
                           labelStyle: TextStyle(color: Color(0xFFD4AF37)),
@@ -1017,9 +1022,13 @@ class _AddEditCustomerScreenState extends State<AddEditCustomerScreen> {
                           if (value == null || value.trim().isEmpty) {
                             return 'Bitte geben Sie eine Telefonnummer ein';
                           }
+                          // Zusätzliche Validierung: mindestens 5 Ziffern
+                          final digitsOnly = value.replaceAll(RegExp(r'[^0-9]'), '');
+                          if (digitsOnly.length < 5) {
+                            return 'Telefonnummer muss mindestens 5 Ziffern enthalten';
+                          }
                           return null;
                         },
-                        keyboardType: TextInputType.phone,
                       ),
                     ),
 

@@ -1,75 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../models/ingredient.dart';  // Nutze zentrale Models
 import 'add_edit_ingredient_screen.dart';
 import 'ingredient_details_screen.dart';
 
-// Ingredient Model
-class Ingredient {
-  final String id;
-  String name;
-  String unit;
-  Map<String, double> prices; // Store: Price
-  String? imagePath;
-  IngredientCategory category;
-  String notes;
-  String? otherStoreName;
-  double? otherStorePrice;
-  DateTime lastUpdated;
-
-  Ingredient({
-    required this.id,
-    required this.name,
-    required this.unit,
-    required this.prices,
-    this.imagePath,
-    required this.category,
-    this.notes = '',
-    this.otherStoreName,
-    this.otherStorePrice,
-    DateTime? lastUpdated,
-  }) : lastUpdated = lastUpdated ?? DateTime.now();
-
-  double get cheapestPrice {
-    final allPrices = <double>[...prices.values];
-    if (otherStorePrice != null) allPrices.add(otherStorePrice!);
-    if (allPrices.isEmpty) return 0.0;
-    return allPrices.reduce((a, b) => a < b ? a : b);
-  }
-
-  String get cheapestStore {
-    if (prices.isEmpty && otherStorePrice == null) return '';
-
-    final minPrice = cheapestPrice;
-
-    // Check regular stores
-    for (final entry in prices.entries) {
-      if (entry.value == minPrice) return entry.key;
-    }
-
-    // Check other store
-    if (otherStorePrice == minPrice && otherStoreName != null) {
-      return otherStoreName!;
-    }
-
-    return '';
-  }
-}
-
-// Category Model
-enum IngredientCategory {
-  vegetables('Gemüse', Icons.eco, Color(0xFF4CAF50)),
-  meat('Fleisch', Icons.set_meal, Color(0xFFE91E63)),
-  spices('Gewürze', Icons.grain, Color(0xFFFF9800)),
-  dairy('Milchprodukte', Icons.local_drink, Color(0xFF2196F3)),
-  grains('Getreide & Hülsenfrüchte', Icons.grass, Color(0xFF795548)),
-  oils('Öle & Fette', Icons.opacity, Color(0xFFFFC107)),
-  others('Sonstiges', Icons.more_horiz, Color(0xFF9C27B0));
-
-  const IngredientCategory(this.displayName, this.icon, this.color);
-
-  final String displayName;
-  final IconData icon;
-  final Color color;
-}
+// ALTE SCREEN VERSION - sollte durch ingredients_main_screen.dart ersetzt werden
+// Nur als Backup falls die neue Struktur noch nicht funktioniert
 
 class IngredientsScreen extends StatefulWidget {
   const IngredientsScreen({super.key});

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
-import 'ingredients_screen.dart';
+import '../../models/ingredient.dart';  // Nutze zentrale Models
+import '../../services/image_service.dart';
+import '../../widgets/ingredients/photo_picker_widget.dart';
+import '../../utils/constants.dart';
 
 class AddEditIngredientScreen extends StatefulWidget {
   final IngredientCategory initialCategory;
@@ -35,11 +34,6 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
   String _selectedUnit = 'kg';
   IngredientCategory _selectedCategory = IngredientCategory.vegetables;
   String? _imagePath;
-  final ImagePicker _picker = ImagePicker();
-
-  final List<String> _units = [
-    'kg', 'g', 'Liter', 'ml', 'Stück', 'Bund', 'Packung', 'Dose', 'Flasche'
-  ];
 
   @override
   void initState() {
@@ -59,158 +53,6 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
       _lidlController.text = ingredient.prices['Lidl']?.toString() ?? '';
       _otherStoreNameController.text = ingredient.otherStoreName ?? '';
       _otherStorePriceController.text = ingredient.otherStorePrice?.toString() ?? '';
-    }
-  }
-
-  Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF335B41),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        side: BorderSide(color: Color(0xFFD4AF37), width: 2),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 50,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFD4AF37),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Foto auswählen',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFD4AF37),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildImageSourceButton(
-                    icon: Icons.camera_alt,
-                    title: 'Kamera',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _takePhoto(ImageSource.camera);
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildImageSourceButton(
-                    icon: Icons.photo_library,
-                    title: 'Galerie',
-                    onTap: () {
-                      Navigator.pop(context);
-                      _takePhoto(ImageSource.gallery);
-                    },
-                  ),
-                ),
-              ],
-            ),
-            if (_imagePath != null) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: _buildImageSourceButton(
-                  icon: Icons.delete,
-                  title: 'Foto entfernen',
-                  color: Colors.red,
-                  onTap: () {
-                    Navigator.pop(context);
-                    setState(() {
-                      _imagePath = null;
-                    });
-                  },
-                ),
-              ),
-            ],
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImageSourceButton({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    Color? color,
-  }) {
-    final buttonColor = color ?? _selectedCategory.color;
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: buttonColor, width: 2),
-        color: buttonColor.withValues(alpha: 0.1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                Icon(icon, color: buttonColor, size: 28),
-                const SizedBox(height: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: buttonColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _takePhoto(ImageSource source) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        maxWidth: 500,
-        maxHeight: 500,
-        imageQuality: 80,
-      );
-
-      if (image != null) {
-        final Directory appDir = await getApplicationDocumentsDirectory();
-        final String fileName = '${DateTime.now().millisecondsSinceEpoch}_ingredient.jpg';
-        final String newPath = path.join(appDir.path, 'ingredients', fileName);
-
-        await Directory(path.dirname(newPath)).create(recursive: true);
-        await File(image.path).copy(newPath);
-
-        setState(() {
-          _imagePath = newPath;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Fehler beim Laden des Fotos: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
 
@@ -258,7 +100,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     final isEditing = widget.ingredient != null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF335B41),
+      backgroundColor: AppConstants.primaryGreen,
       body: Column(
         children: [
           // AppBar
@@ -270,9 +112,9 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
               right: 16,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFF000000),
+              color: AppConstants.black,
               border: Border(
-                bottom: BorderSide(color: _selectedCategory.color, width: 2),
+                bottom: BorderSide(color: _selectedCategory.color, width: AppConstants.borderWidth),
               ),
             ),
             child: Row(
@@ -282,7 +124,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   height: 40,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _selectedCategory.color, width: 2),
+                    border: Border.all(color: _selectedCategory.color, width: AppConstants.borderWidth),
                   ),
                   child: Material(
                     color: Colors.transparent,
@@ -330,13 +172,21 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppConstants.padding),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     // Foto Bereich
-                    _buildPhotoSection(),
+                    PhotoPickerWidget(
+                      imagePath: _imagePath,
+                      category: _selectedCategory,
+                      onImageChanged: (newImagePath) {
+                        setState(() {
+                          _imagePath = newImagePath;
+                        });
+                      },
+                    ),
                     const SizedBox(height: 20),
 
                     // Name & Einheit
@@ -367,86 +217,11 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     );
   }
 
-  Widget _buildPhotoSection() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _selectedCategory.color, width: 2),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Icon(Icons.camera_alt, color: _selectedCategory.color),
-                const SizedBox(width: 8),
-                Text(
-                  'Foto',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: _selectedCategory.color,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: _selectedCategory.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: _selectedCategory.color, width: 2),
-                ),
-                child: _imagePath != null && File(_imagePath!).existsSync()
-                    ? ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.file(
-                    File(_imagePath!),
-                    fit: BoxFit.cover,
-                  ),
-                )
-                    : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add_a_photo,
-                      size: 40,
-                      color: _selectedCategory.color,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Foto hinzufügen',
-                      style: TextStyle(
-                        color: _selectedCategory.color,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildBasicInfoSection() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _selectedCategory.color, width: 2),
-      ),
+      decoration: AppDecorations.categoryBorder(_selectedCategory.color),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -469,22 +244,14 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             // Name
             TextFormField(
               controller: _nameController,
-              style: const TextStyle(color: Colors.white),
+              style: AppConstants.whiteText,
               decoration: InputDecoration(
                 labelText: 'Name der Zutat *',
                 labelStyle: TextStyle(color: _selectedCategory.color),
                 hintText: 'z.B. Basmati Reis',
-                hintStyle: const TextStyle(color: Colors.grey),
+                hintStyle: AppConstants.greyHint,
                 prefixIcon: Icon(Icons.label, color: _selectedCategory.color),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: _selectedCategory.color),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: _selectedCategory.color.withValues(alpha: 0.5)),
-                ),
-                focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: _selectedCategory.color, width: 2),
                 ),
@@ -503,8 +270,8 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             // Einheit Dropdown
             DropdownButtonFormField<String>(
               value: _selectedUnit,
-              style: const TextStyle(color: Colors.white),
-              dropdownColor: const Color(0xFF335B41),
+              style: AppConstants.whiteText,
+              dropdownColor: AppConstants.primaryGreen,
               decoration: InputDecoration(
                 labelText: 'Einheit *',
                 labelStyle: TextStyle(color: _selectedCategory.color),
@@ -522,9 +289,9 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   borderSide: BorderSide(color: _selectedCategory.color, width: 2),
                 ),
               ),
-              items: _units.map((unit) => DropdownMenuItem(
+              items: AppConstants.units.map((unit) => DropdownMenuItem(
                 value: unit,
-                child: Text(unit, style: const TextStyle(color: Colors.white)),
+                child: Text(unit, style: AppConstants.whiteText),
               )).toList(),
               onChanged: (value) {
                 setState(() {
@@ -540,13 +307,9 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
 
   Widget _buildCategorySection() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _selectedCategory.color, width: 2),
-      ),
+      decoration: AppDecorations.categoryBorder(_selectedCategory.color),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -567,8 +330,8 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             const SizedBox(height: 16),
             DropdownButtonFormField<IngredientCategory>(
               value: _selectedCategory,
-              style: const TextStyle(color: Colors.white),
-              dropdownColor: const Color(0xFF335B41),
+              style: AppConstants.whiteText,
+              dropdownColor: AppConstants.primaryGreen,
               decoration: InputDecoration(
                 labelText: 'Kategorie auswählen',
                 labelStyle: TextStyle(color: _selectedCategory.color),
@@ -592,7 +355,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   children: [
                     Icon(category.icon, color: category.color, size: 20),
                     const SizedBox(width: 8),
-                    Text(category.displayName, style: const TextStyle(color: Colors.white)),
+                    Text(category.displayName, style: AppConstants.whiteText),
                   ],
                 ),
               )).toList(),
@@ -610,26 +373,22 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
 
   Widget _buildPricesSection() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD4AF37), width: 2),
-      ),
+      decoration: AppDecorations.goldBorder(),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(
               children: [
-                Icon(Icons.euro, color: Color(0xFFD4AF37)),
+                Icon(Icons.euro, color: AppConstants.primaryGold),
                 SizedBox(width: 8),
                 Text(
                   'Preise pro Einheit',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFD4AF37),
+                    color: AppConstants.primaryGold,
                   ),
                 ),
               ],
@@ -652,7 +411,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             const Text(
               'Sonstiger Markt:',
               style: TextStyle(
-                color: Color(0xFFD4AF37),
+                color: AppConstants.primaryGold,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -663,23 +422,23 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   flex: 2,
                   child: TextFormField(
                     controller: _otherStoreNameController,
-                    style: const TextStyle(color: Colors.white),
+                    style: AppConstants.whiteText,
                     decoration: InputDecoration(
                       labelText: 'Marktname',
-                      labelStyle: const TextStyle(color: Color(0xFFD4AF37)),
+                      labelStyle: const TextStyle(color: AppConstants.primaryGold),
                       hintText: 'z.B. Kaufland',
-                      hintStyle: const TextStyle(color: Colors.grey),
+                      hintStyle: AppConstants.greyHint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                        borderSide: const BorderSide(color: AppConstants.primaryGold),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 0.5),
+                        borderSide: const BorderSide(color: AppConstants.primaryGold, width: 0.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2),
+                        borderSide: const BorderSide(color: AppConstants.primaryGold, width: 2),
                       ),
                     ),
                     textCapitalization: TextCapitalization.words,
@@ -689,27 +448,27 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                 Expanded(
                   child: TextFormField(
                     controller: _otherStorePriceController,
-                    style: const TextStyle(color: Colors.white),
+                    style: AppConstants.whiteText,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
                     ],
                     decoration: InputDecoration(
                       labelText: 'Preis €',
-                      labelStyle: const TextStyle(color: Color(0xFFD4AF37)),
+                      labelStyle: const TextStyle(color: AppConstants.primaryGold),
                       hintText: '0,00',
-                      hintStyle: const TextStyle(color: Colors.grey),
+                      hintStyle: AppConstants.greyHint,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                        borderSide: const BorderSide(color: AppConstants.primaryGold),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 0.5),
+                        borderSide: const BorderSide(color: AppConstants.primaryGold, width: 0.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2),
+                        borderSide: const BorderSide(color: AppConstants.primaryGold, width: 2),
                       ),
                     ),
                     validator: (value) {
@@ -737,28 +496,28 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
   Widget _buildPriceField(String storeName, TextEditingController controller, IconData icon) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(color: Colors.white),
+      style: AppConstants.whiteText,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
       ],
       decoration: InputDecoration(
         labelText: '$storeName Preis (€)',
-        labelStyle: const TextStyle(color: Color(0xFFD4AF37)),
+        labelStyle: const TextStyle(color: AppConstants.primaryGold),
         hintText: '0,00',
-        hintStyle: const TextStyle(color: Colors.grey),
-        prefixIcon: Icon(icon, color: const Color(0xFFD4AF37)),
+        hintStyle: AppConstants.greyHint,
+        prefixIcon: Icon(icon, color: AppConstants.primaryGold),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+          borderSide: const BorderSide(color: AppConstants.primaryGold),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 0.5),
+          borderSide: const BorderSide(color: AppConstants.primaryGold, width: 0.5),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2),
+          borderSide: const BorderSide(color: AppConstants.primaryGold, width: 2),
         ),
       ),
       validator: (value) {
@@ -775,26 +534,22 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
 
   Widget _buildNotesSection() {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD4AF37), width: 2),
-      ),
+      decoration: AppDecorations.goldBorder(),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppConstants.padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(
               children: [
-                Icon(Icons.note, color: Color(0xFFD4AF37)),
+                Icon(Icons.note, color: AppConstants.primaryGold),
                 SizedBox(width: 8),
                 Text(
                   'Notizen (optional)',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFD4AF37),
+                    color: AppConstants.primaryGold,
                   ),
                 ),
               ],
@@ -802,22 +557,22 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _notesController,
-              style: const TextStyle(color: Colors.white),
+              style: AppConstants.whiteText,
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'z.B. Bio-Qualität, besondere Marke, Allergiehinweise...',
-                hintStyle: const TextStyle(color: Colors.grey),
+                hintStyle: AppConstants.greyHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFD4AF37)),
+                  borderSide: const BorderSide(color: AppConstants.primaryGold),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 0.5),
+                  borderSide: const BorderSide(color: AppConstants.primaryGold, width: 0.5),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2),
+                  borderSide: const BorderSide(color: AppConstants.primaryGold, width: 2),
                 ),
               ),
               textCapitalization: TextCapitalization.sentences,
@@ -832,8 +587,8 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _selectedCategory.color, width: 2),
+        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+        border: Border.all(color: _selectedCategory.color, width: AppConstants.borderWidth),
         gradient: LinearGradient(
           colors: [
             _selectedCategory.color,
@@ -853,7 +608,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
           onTap: _saveIngredient,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -883,4 +638,12 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     _otherStorePriceController.dispose();
     super.dispose();
   }
-}
+} _selectedCategory.color),
+),
+enabledBorder: OutlineInputBorder(
+borderRadius: BorderRadius.circular(8),
+borderSide: BorderSide(color: _selectedCategory.color.withValues(alpha: 0.5)),
+),
+focusedBorder: OutlineInputBorder(
+borderRadius: BorderRadius.circular(8),
+borderSide: BorderSide(color:

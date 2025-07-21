@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'ingredients/ingredients_screen.dart';
+import 'ingredients/ingredients_main_screen.dart';  // GEÄNDERT: neue Datei
 import 'recipes/recipes_screen.dart';
-import 'customers/customers_screen.dart';
+import 'customers/customers_main_screen.dart';       // GEÄNDERT: neue Datei
 import 'orders/orders_screen.dart';
 import '../widgets/golden_lines_painter.dart';
 
@@ -59,10 +59,9 @@ class HomeScreen extends StatelessWidget {
             child: FullButton(
               title: 'Zutaten',
               onTap: () {
-                print("Zutaten Button geklickt!");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const IngredientsScreen()),
+                  MaterialPageRoute(builder: (context) => const IngredientsMainScreen()),
                 );
               },
             ),
@@ -77,7 +76,6 @@ class HomeScreen extends StatelessWidget {
             child: FullButton(
               title: 'Rezepte',
               onTap: () {
-                print("Rezepte Button geklickt!");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const RecipesScreen()),
@@ -95,7 +93,6 @@ class HomeScreen extends StatelessWidget {
             child: FullButton(
               title: 'Bestellungen',
               onTap: () {
-                print("Bestellungen Button geklickt!");
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const OrdersScreen()),
@@ -113,10 +110,9 @@ class HomeScreen extends StatelessWidget {
             child: FullButton(
               title: 'Kunden',
               onTap: () {
-                print("KUNDEN BUTTON GEKLICKT!!!");
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const CustomersScreen()),
+                  MaterialPageRoute(builder: (context) => const CustomersMainScreen()),
                 );
               },
             ),

@@ -21,7 +21,14 @@ class _CustomersMainScreenState extends State<CustomersMainScreen> {
   @override
   void initState() {
     super.initState();
+    _debugDatabasePath(); // DEBUG: Zeige Database-Pfad
     _loadCustomers();
+  }
+
+  // DEBUG: Zeige Database-Pfad
+  Future<void> _debugDatabasePath() async {
+    final path = await _databaseService.getDatabasePath();
+    debugPrint('🗂️ Database Pfad: $path');
   }
 
   // Lade alle Kunden aus der Datenbank

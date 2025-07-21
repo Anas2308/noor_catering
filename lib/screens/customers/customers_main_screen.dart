@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/customer.dart';
+import '../../services/database_service.dart';
 import '../../widgets/customers/customer_card.dart';
 import '../../utils/constants.dart';
 import 'customer_details_screen.dart';
@@ -13,32 +14,140 @@ class CustomersMainScreen extends StatefulWidget {
 }
 
 class _CustomersMainScreenState extends State<CustomersMainScreen> {
-  final List<Customer> _customers = [];
+  final DatabaseService _databaseService = DatabaseService();
+  List<Customer> _customers = [];
+  bool _isLoading = true;
 
-  void _addCustomer(String name, String phoneNumber) {
-    setState(() {
-      _customers.add(Customer(
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomers();
+  }
+
+  // Lade alle Kunden aus der Datenbank
+  Future<void> _loadCustomers() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final customerDBList = await _databaseService.getCustomers();
+
+      setState(() {
+        _customers = customerDBList.map((customerDB) => Customer(
+          id: customerDB.id,
+          name: customerDB.name,
+          phoneNumber: customerDB.phoneNumber,
+        )).toList();
+        _isLoading = false;
+      });
+
+      debugPrint('✅ ${_customers.length} Kunden geladen');
+    } catch (e) {
+      debugPrint('❌ Fehler beim Laden der Kunden: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Füge neuen Kunden hinzu
+  Future<void> _addCustomer(String name, String phoneNumber) async {
+    try {
+      final customerDB = CustomerDB(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: name,
         phoneNumber: phoneNumber,
-      ));
-    });
-  }
+      );
 
-  void _updateCustomer(String id, String name, String phoneNumber) {
-    setState(() {
-      final customerIndex = _customers.indexWhere((c) => c.id == id);
-      if (customerIndex != -1) {
-        _customers[customerIndex].name = name;
-        _customers[customerIndex].phoneNumber = phoneNumber;
+      await _databaseService.insertCustomer(customerDB);
+      await _loadCustomers(); // Neu laden
+
+      debugPrint('✅ Kunde "${name}" hinzugefügt');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Kunde "$name" wurde hinzugefügt'),
+            backgroundColor: AppConstants.primaryGold,
+          ),
+        );
       }
-    });
+    } catch (e) {
+      debugPrint('❌ Fehler beim Hinzufügen des Kunden: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fehler beim Speichern des Kunden'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
-  void _deleteCustomer(String id) {
-    setState(() {
-      _customers.removeWhere((c) => c.id == id);
-    });
+  // Aktualisiere Kunden
+  Future<void> _updateCustomer(String id, String name, String phoneNumber) async {
+    try {
+      final customerDB = CustomerDB(
+        id: id,
+        name: name,
+        phoneNumber: phoneNumber,
+      );
+
+      await _databaseService.updateCustomer(customerDB);
+      await _loadCustomers(); // Neu laden
+
+      debugPrint('✅ Kunde "${name}" aktualisiert');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Kunde "$name" wurde aktualisiert'),
+            backgroundColor: AppConstants.primaryGold,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Fehler beim Aktualisieren des Kunden: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fehler beim Aktualisieren des Kunden'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Lösche Kunden
+  Future<void> _deleteCustomer(String id) async {
+    try {
+      await _databaseService.deleteCustomer(id);
+      await _loadCustomers(); // Neu laden
+
+      debugPrint('✅ Kunde gelöscht');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Kunde wurde gelöscht'),
+            backgroundColor: AppConstants.primaryGold,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('❌ Fehler beim Löschen des Kunden: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fehler beim Löschen des Kunden'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showCustomerDetails(Customer customer) {
@@ -136,7 +245,9 @@ class _CustomersMainScreenState extends State<CustomersMainScreen> {
 
           // Content Bereich
           Expanded(
-            child: _customers.isEmpty ? _buildEmptyState() : _buildCustomersList(),
+            child: _isLoading
+                ? _buildLoadingState()
+                : (_customers.isEmpty ? _buildEmptyState() : _buildCustomersList()),
           ),
         ],
       ),
@@ -179,6 +290,27 @@ class _CustomersMainScreenState extends State<CustomersMainScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            color: AppConstants.primaryGold,
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Lade Kunden...',
+            style: TextStyle(
+              color: AppConstants.primaryGold,
+              fontSize: 16,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -33,6 +33,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
   String _selectedUnit = 'kg';
   IngredientCategory _selectedCategory = IngredientCategory.vegetables;
   String? _imagePath;
+  bool _isSaving = false; // Für Loading State
 
   @override
   void initState() {
@@ -55,42 +56,70 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     }
   }
 
-  void _saveIngredient() {
+  // ← HIER IST DER FIX!
+  Future<void> _saveIngredient() async {
     if (_formKey.currentState!.validate()) {
-      final prices = <String, double>{};
+      setState(() {
+        _isSaving = true; // Zeige Loading
+      });
 
-      if (_reweController.text.isNotEmpty) {
-        prices['REWE'] = double.parse(_reweController.text.replaceAll(',', '.'));
-      }
-      if (_edekaController.text.isNotEmpty) {
-        prices['Edeka'] = double.parse(_edekaController.text.replaceAll(',', '.'));
-      }
-      if (_lidlController.text.isNotEmpty) {
-        prices['Lidl'] = double.parse(_lidlController.text.replaceAll(',', '.'));
-      }
+      try {
+        final prices = <String, double>{};
 
-      String? otherStoreName;
-      double? otherStorePrice;
-      if (_otherStoreNameController.text.isNotEmpty && _otherStorePriceController.text.isNotEmpty) {
-        otherStoreName = _otherStoreNameController.text.trim();
-        otherStorePrice = double.parse(_otherStorePriceController.text.replaceAll(',', '.'));
+        if (_reweController.text.isNotEmpty) {
+          prices['REWE'] = double.parse(_reweController.text.replaceAll(',', '.'));
+        }
+        if (_edekaController.text.isNotEmpty) {
+          prices['Edeka'] = double.parse(_edekaController.text.replaceAll(',', '.'));
+        }
+        if (_lidlController.text.isNotEmpty) {
+          prices['Lidl'] = double.parse(_lidlController.text.replaceAll(',', '.'));
+        }
+
+        String? otherStoreName;
+        double? otherStorePrice;
+        if (_otherStoreNameController.text.isNotEmpty && _otherStorePriceController.text.isNotEmpty) {
+          otherStoreName = _otherStoreNameController.text.trim();
+          otherStorePrice = double.parse(_otherStorePriceController.text.replaceAll(',', '.'));
+        }
+
+        final ingredient = Ingredient(
+          id: widget.ingredient?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          name: _nameController.text.trim(),
+          unit: _selectedUnit,
+          prices: prices,
+          imagePath: _imagePath,
+          category: _selectedCategory,
+          notes: _notesController.text.trim(),
+          otherStoreName: otherStoreName,
+          otherStorePrice: otherStorePrice,
+          lastUpdated: DateTime.now(),
+        );
+
+        // WARTE auf die Database-Operation!
+        await widget.onSave(ingredient);
+
+        // Erst DANN navigiere zurück
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      } catch (e) {
+        debugPrint('❌ Fehler beim Speichern: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Fehler beim Speichern der Zutat'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isSaving = false; // Verstecke Loading
+          });
+        }
       }
-
-      final ingredient = Ingredient(
-        id: widget.ingredient?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
-        name: _nameController.text.trim(),
-        unit: _selectedUnit,
-        prices: prices,
-        imagePath: _imagePath,
-        category: _selectedCategory,
-        notes: _notesController.text.trim(),
-        otherStoreName: otherStoreName,
-        otherStorePrice: otherStorePrice,
-        lastUpdated: DateTime.now(),
-      );
-
-      widget.onSave(ingredient);
-      Navigator.pop(context);
     }
   }
 
@@ -129,7 +158,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(20),
-                      onTap: () => Navigator.pop(context),
+                      onTap: _isSaving ? null : () => Navigator.pop(context), // Disable während Speichern
                       child: Icon(
                         Icons.arrow_back,
                         color: _selectedCategory.color,
@@ -244,6 +273,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             TextFormField(
               controller: _nameController,
               style: AppConstants.whiteText,
+              enabled: !_isSaving, // Disable während Speichern
               decoration: InputDecoration(
                 labelText: 'Name der Zutat *',
                 labelStyle: TextStyle(color: _selectedCategory.color),
@@ -300,7 +330,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                 value: unit,
                 child: Text(unit, style: AppConstants.whiteText),
               )).toList(),
-              onChanged: (value) {
+              onChanged: _isSaving ? null : (value) { // Disable während Speichern
                 setState(() {
                   _selectedUnit = value!;
                 });
@@ -366,7 +396,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   ],
                 ),
               )).toList(),
-              onChanged: (value) {
+              onChanged: _isSaving ? null : (value) { // Disable während Speichern
                 setState(() {
                   _selectedCategory = value!;
                 });
@@ -430,6 +460,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   child: TextFormField(
                     controller: _otherStoreNameController,
                     style: AppConstants.whiteText,
+                    enabled: !_isSaving, // Disable während Speichern
                     decoration: InputDecoration(
                       labelText: 'Marktname',
                       labelStyle: const TextStyle(color: AppConstants.primaryGold),
@@ -456,6 +487,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
                   child: TextFormField(
                     controller: _otherStorePriceController,
                     style: AppConstants.whiteText,
+                    enabled: !_isSaving, // Disable während Speichern
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
@@ -504,6 +536,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
     return TextFormField(
       controller: controller,
       style: AppConstants.whiteText,
+      enabled: !_isSaving, // Disable während Speichern
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]')),
@@ -565,6 +598,7 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
             TextFormField(
               controller: _notesController,
               style: AppConstants.whiteText,
+              enabled: !_isSaving, // Disable während Speichern
               maxLines: 3,
               decoration: InputDecoration(
                 hintText: 'z.B. Bio-Qualität, besondere Marke, Allergiehinweise...',
@@ -616,17 +650,35 @@ class _AddEditIngredientScreenState extends State<AddEditIngredientScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-          onTap: _saveIngredient,
+          onTap: _isSaving ? null : _saveIngredient, // Disable während Speichern
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              isEditing ? 'Änderungen speichern' : 'Zutat hinzufügen',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (_isSaving) ...[
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                Text(
+                  _isSaving
+                      ? 'Speichere...'
+                      : (isEditing ? 'Änderungen speichern' : 'Zutat hinzufügen'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

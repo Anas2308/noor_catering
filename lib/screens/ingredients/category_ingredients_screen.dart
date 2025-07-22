@@ -26,26 +26,62 @@ class CategoryIngredientsScreen extends StatefulWidget {
 }
 
 class _CategoryIngredientsScreenState extends State<CategoryIngredientsScreen> {
-  void _showAddIngredientDialog() {
-    Navigator.push(
+  late List<Ingredient> _localIngredients;
+
+  @override
+  void initState() {
+    super.initState();
+    // Kopiere die übergebenen Zutaten in lokale Liste
+    _localIngredients = List.from(widget.ingredients);
+  }
+
+  void _showAddIngredientDialog() async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => AddEditIngredientScreen(
           initialCategory: widget.category,
-          onSave: widget.onIngredientAdded,
+          onSave: (ingredient) async {
+            // Speichere in Database
+            await widget.onIngredientAdded(ingredient);
+
+            // Aktualisiere lokale Liste sofort
+            setState(() {
+              _localIngredients.add(ingredient);
+            });
+          },
         ),
       ),
     );
   }
 
-  void _showIngredientDetails(Ingredient ingredient) {
-    Navigator.push(
+  void _showIngredientDetails(Ingredient ingredient) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => IngredientDetailsScreen(
           ingredient: ingredient,
-          onUpdate: widget.onIngredientUpdated,
-          onDelete: widget.onIngredientDeleted,
+          onUpdate: (updatedIngredient) async {
+            // Speichere Update in Database
+            await widget.onIngredientUpdated(updatedIngredient);
+
+            // Aktualisiere lokale Liste sofort
+            setState(() {
+              final index = _localIngredients.indexWhere((i) => i.id == updatedIngredient.id);
+              if (index != -1) {
+                _localIngredients[index] = updatedIngredient;
+              }
+            });
+          },
+          onDelete: (ingredientId) async {
+            // Lösche aus Database
+            await widget.onIngredientDeleted(ingredientId);
+
+            // Entferne aus lokaler Liste sofort
+            setState(() {
+              _localIngredients.removeWhere((i) => i.id == ingredientId);
+            });
+          },
         ),
       ),
     );
@@ -142,7 +178,7 @@ class _CategoryIngredientsScreenState extends State<CategoryIngredientsScreen> {
 
           // Content
           Expanded(
-            child: widget.ingredients.isEmpty
+            child: _localIngredients.isEmpty
                 ? _buildEmptyState()
                 : _buildIngredientsList(),
           ),
@@ -290,7 +326,7 @@ class _CategoryIngredientsScreenState extends State<CategoryIngredientsScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                '${widget.ingredients.length} ${widget.ingredients.length == 1 ? 'Zutat' : 'Zutaten'}',
+                '${_localIngredients.length} ${_localIngredients.length == 1 ? 'Zutat' : 'Zutaten'}',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -305,9 +341,9 @@ class _CategoryIngredientsScreenState extends State<CategoryIngredientsScreen> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: AppConstants.padding),
-            itemCount: widget.ingredients.length,
+            itemCount: _localIngredients.length,
             itemBuilder: (context, index) {
-              final ingredient = widget.ingredients[index];
+              final ingredient = _localIngredients[index];
               return IngredientCard(
                 ingredient: ingredient,
                 onTap: () => _showIngredientDetails(ingredient),

@@ -1,6 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 
 // Simple Customer Model for Database
 class CustomerDB {
@@ -14,7 +15,6 @@ class CustomerDB {
     required this.phoneNumber,
   });
 
-  // Convert to Map for Database
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -23,12 +23,68 @@ class CustomerDB {
     };
   }
 
-  // Create from Map from Database
   factory CustomerDB.fromMap(Map<String, dynamic> map) {
     return CustomerDB(
       id: map['id'],
       name: map['name'],
       phoneNumber: map['phone_number'],
+    );
+  }
+}
+
+// Ingredient Model for Database
+class IngredientDB {
+  final String id;
+  final String name;
+  final String unit;
+  final Map<String, double> prices;
+  final String? imagePath;
+  final String category;
+  final String notes;
+  final String? otherStoreName;
+  final double? otherStorePrice;
+  final String lastUpdated;
+
+  IngredientDB({
+    required this.id,
+    required this.name,
+    required this.unit,
+    required this.prices,
+    this.imagePath,
+    required this.category,
+    required this.notes,
+    this.otherStoreName,
+    this.otherStorePrice,
+    required this.lastUpdated,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'unit': unit,
+      'prices': jsonEncode(prices), // JSON String für Map
+      'image_path': imagePath,
+      'category': category,
+      'notes': notes,
+      'other_store_name': otherStoreName,
+      'other_store_price': otherStorePrice,
+      'last_updated': lastUpdated,
+    };
+  }
+
+  factory IngredientDB.fromMap(Map<String, dynamic> map) {
+    return IngredientDB(
+      id: map['id'],
+      name: map['name'],
+      unit: map['unit'],
+      prices: Map<String, double>.from(jsonDecode(map['prices'] ?? '{}')),
+      imagePath: map['image_path'],
+      category: map['category'],
+      notes: map['notes'] ?? '',
+      otherStoreName: map['other_store_name'],
+      otherStorePrice: map['other_store_price']?.toDouble(),
+      lastUpdated: map['last_updated'],
     );
   }
 }
@@ -62,8 +118,9 @@ class DatabaseService {
       // Database öffnen/erstellen
       final database = await openDatabase(
         path,
-        version: 1,
+        version: 2, // VERSION ERHÖHT für neue Tabelle!
         onCreate: _createDatabase,
+        onUpgrade: _upgradeDatabase,
         onOpen: (db) {
           debugPrint('📂 Database geöffnet: $path');
         },
@@ -91,11 +148,55 @@ class DatabaseService {
           phone_number TEXT NOT NULL
         )
       ''');
-
       debugPrint('✅ Customers Tabelle erstellt');
+
+      // Ingredients Table
+      await db.execute('''
+        CREATE TABLE ingredients (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          unit TEXT NOT NULL,
+          prices TEXT NOT NULL,
+          image_path TEXT,
+          category TEXT NOT NULL,
+          notes TEXT,
+          other_store_name TEXT,
+          other_store_price REAL,
+          last_updated TEXT NOT NULL
+        )
+      ''');
+      debugPrint('✅ Ingredients Tabelle erstellt');
 
     } catch (e) {
       debugPrint('❌ Fehler beim Erstellen der Tabellen: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _upgradeDatabase(Database db, int oldVersion, int newVersion) async {
+    try {
+      debugPrint('🔄 Upgrade Database von Version $oldVersion zu $newVersion');
+
+      if (oldVersion < 2) {
+        // Ingredients Table für bestehende Databases hinzufügen
+        await db.execute('''
+          CREATE TABLE ingredients (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            unit TEXT NOT NULL,
+            prices TEXT NOT NULL,
+            image_path TEXT,
+            category TEXT NOT NULL,
+            notes TEXT,
+            other_store_name TEXT,
+            other_store_price REAL,
+            last_updated TEXT NOT NULL
+          )
+        ''');
+        debugPrint('✅ Ingredients Tabelle hinzugefügt (Upgrade)');
+      }
+    } catch (e) {
+      debugPrint('❌ Fehler beim Database-Upgrade: $e');
       rethrow;
     }
   }
@@ -111,14 +212,19 @@ class DatabaseService {
 
       // Prüfe ob customers Tabelle existiert
       final hasCustomers = tables.any((table) => table['name'] == 'customers');
-      if (!hasCustomers) {
-        debugPrint('⚠️ Customers Tabelle fehlt - erstelle sie...');
-        await _createDatabase(db, 1);
+      final hasIngredients = tables.any((table) => table['name'] == 'ingredients');
+
+      if (!hasCustomers || !hasIngredients) {
+        debugPrint('⚠️ Fehlende Tabellen - erstelle alle neu...');
+        await _createDatabase(db, 2);
       }
 
       // Zeige Anzahl der Einträge
       final customerCount = await db.rawQuery('SELECT COUNT(*) as count FROM customers');
+      final ingredientCount = await db.rawQuery('SELECT COUNT(*) as count FROM ingredients');
+
       debugPrint('👥 Anzahl Kunden in DB: ${customerCount.first['count']}');
+      debugPrint('🥕 Anzahl Zutaten in DB: ${ingredientCount.first['count']}');
 
     } catch (e) {
       debugPrint('❌ Fehler beim Verifizieren der Tabellen: $e');
@@ -228,6 +334,131 @@ class DatabaseService {
     }
   }
 
+  // ========== INGREDIENTS ==========
+
+  Future<List<IngredientDB>> getIngredients() async {
+    try {
+      debugPrint('📖 Lade Zutaten aus Database...');
+
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query('ingredients');
+
+      debugPrint('📊 ${maps.length} Zutaten aus DB geladen');
+
+      if (maps.isNotEmpty) {
+        debugPrint('🥕 Erste Zutat: ${maps.first['name']}');
+      }
+
+      return List.generate(maps.length, (i) {
+        return IngredientDB.fromMap(maps[i]);
+      });
+    } catch (e) {
+      debugPrint('❌ Fehler beim Laden der Zutaten: $e');
+      return [];
+    }
+  }
+
+  Future<List<IngredientDB>> getIngredientsByCategory(String category) async {
+    try {
+      debugPrint('📖 Lade Zutaten für Kategorie: $category');
+
+      final db = await database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'ingredients',
+        where: 'category = ?',
+        whereArgs: [category],
+      );
+
+      debugPrint('📊 ${maps.length} Zutaten für $category geladen');
+
+      return List.generate(maps.length, (i) {
+        return IngredientDB.fromMap(maps[i]);
+      });
+    } catch (e) {
+      debugPrint('❌ Fehler beim Laden der Zutaten für $category: $e');
+      return [];
+    }
+  }
+
+  Future<void> insertIngredient(IngredientDB ingredient) async {
+    try {
+      debugPrint('💾 Speichere Zutat: ${ingredient.name}');
+
+      final db = await database;
+      await db.insert(
+        'ingredients',
+        ingredient.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
+      debugPrint('✅ Zutat "${ingredient.name}" gespeichert (ID: ${ingredient.id})');
+
+      // Verification
+      final savedIngredients = await db.query(
+          'ingredients',
+          where: 'id = ?',
+          whereArgs: [ingredient.id]
+      );
+
+      if (savedIngredients.isNotEmpty) {
+        debugPrint('✅ Verification: Zutat ist in DB gespeichert');
+      } else {
+        debugPrint('❌ Verification: Zutat NICHT in DB gefunden!');
+      }
+
+    } catch (e) {
+      debugPrint('❌ Fehler beim Speichern der Zutat: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateIngredient(IngredientDB ingredient) async {
+    try {
+      debugPrint('🔄 Aktualisiere Zutat: ${ingredient.name}');
+
+      final db = await database;
+      final updatedRows = await db.update(
+        'ingredients',
+        ingredient.toMap(),
+        where: 'id = ?',
+        whereArgs: [ingredient.id],
+      );
+
+      if (updatedRows > 0) {
+        debugPrint('✅ Zutat "${ingredient.name}" aktualisiert');
+      } else {
+        debugPrint('⚠️ Zutat mit ID ${ingredient.id} nicht gefunden');
+      }
+
+    } catch (e) {
+      debugPrint('❌ Fehler beim Aktualisieren der Zutat: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteIngredient(String id) async {
+    try {
+      debugPrint('🗑️ Lösche Zutat mit ID: $id');
+
+      final db = await database;
+      final deletedRows = await db.delete(
+        'ingredients',
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      if (deletedRows > 0) {
+        debugPrint('✅ Zutat gelöscht');
+      } else {
+        debugPrint('⚠️ Zutat mit ID $id nicht gefunden');
+      }
+
+    } catch (e) {
+      debugPrint('❌ Fehler beim Löschen der Zutat: $e');
+      rethrow;
+    }
+  }
+
   // Debug-Funktionen
   Future<void> printAllCustomers() async {
     try {
@@ -239,6 +470,19 @@ class DatabaseService {
       }
     } catch (e) {
       debugPrint('❌ Fehler beim Anzeigen der Kunden: $e');
+    }
+  }
+
+  Future<void> printAllIngredients() async {
+    try {
+      final db = await database;
+      final ingredients = await db.query('ingredients');
+      debugPrint('📋 Alle Zutaten in DB:');
+      for (final ingredient in ingredients) {
+        debugPrint('  🥕 ${ingredient['name']} (${ingredient['category']})');
+      }
+    } catch (e) {
+      debugPrint('❌ Fehler beim Anzeigen der Zutaten: $e');
     }
   }
 
